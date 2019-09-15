@@ -6,6 +6,7 @@ import {
   HttpClient,
   HttpEvent,
 } from '@angular/common/http';
+import { Execution, ChartEach, OrderBook } from './model';
 
 function url(
   path: string,
@@ -106,8 +107,8 @@ export class ApiService {
 
   public async getOrderBooks(
     datehourminute: string,
-  ): Promise<Map<string, OrderBook>> {
-    return this.http.get<Map<string, OrderBook>>(
+  ): Promise<any> {
+    return this.http.get<any>(
       url(`/order_books/${datehourminute}.json`),
       new OptBuilder()
         .jsonResponseBody()
