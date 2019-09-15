@@ -19,19 +19,9 @@ export class AppService {
     private api: ApiService,
     public all: StoreAllService,
   ) {
-    this.fetchAll(
-      [
-        '2019091510',
-        '2019091511',
-      ],
-      [
-        '201909151100',
-        '201909151101',
-      ],
-    );
   }
 
-  public async fetchOrderBooks(...datehourminutes: Array<string>): Promise<Array<OrderBook>> {
+  private async fetchOrderBooks(...datehourminutes: Array<string>): Promise<Array<OrderBook>> {
     const tmp: Array<OrderBook> = [];
     for (const datehourminute of datehourminutes) {
       let obs: any = [];
@@ -50,7 +40,7 @@ export class AppService {
     return Promise.resolve(tmp);
   }
 
-  public async fetchChart1sec(...datehours: Array<string>): Promise<Array<ChartEach>> {
+  private async fetchChart1sec(...datehours: Array<string>): Promise<Array<ChartEach>> {
     const tmp: Array<ChartEach> = [];
     for (const datehour of datehours) {
       let charts: any = [];

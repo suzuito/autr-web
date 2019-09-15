@@ -24,7 +24,7 @@ export class Chart {
     private chart1sec: StoreChart1secService,
   ) {
     this.selector = selector;
-    this.widthSvg = 1000;
+    this.widthSvg = 5000;
     this.heightSvg = 1000;
     this.paddingLeft = 100;
     this.paddingBottom = 100;
