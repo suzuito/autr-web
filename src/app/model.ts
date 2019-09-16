@@ -33,12 +33,12 @@ export interface OrderBook extends SequenceByCreatedAt {
 }
 
 export function maxPriceLadderEach(arr: Array<LadderEach>): LadderEach {
-  const i = max(arr, v => v.price);
+  const i = max(arr.slice(0, 70), v => v.price);
   return arr[i];
 }
 
 export function minPriceLadderEach(arr: Array<LadderEach>): LadderEach {
-  const i = min(arr, v => v.price);
+  const i = min(arr.slice(0, 70), v => v.price);
   return arr[i];
 }
 

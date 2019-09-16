@@ -12,12 +12,18 @@ import { ChartComponent } from './chart/chart.component';
 import { HttpClientModule } from '@angular/common/http';
 import { InputterComponent } from './inputter/inputter.component';
 import { FormsModule } from '@angular/forms';
+import { InfoComponent } from './info/info.component';
+import { HistoryComponent } from './history/history.component';
+import { RealtimeComponent } from './realtime/realtime.component';
 
 @NgModule({
   declarations: [
     AppComponent,
     ChartComponent,
-    InputterComponent
+    InputterComponent,
+    InfoComponent,
+    HistoryComponent,
+    RealtimeComponent
   ],
   imports: [
     BrowserModule,

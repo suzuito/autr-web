@@ -15,10 +15,13 @@ import { StoreAllService } from './store-all.service';
 })
 export class AppService {
 
+  public averageQuantity: number;
+
   constructor(
     private api: ApiService,
     public all: StoreAllService,
   ) {
+    this.averageQuantity = 0;
   }
 
   private async fetchOrderBooks(...datehourminutes: Array<string>): Promise<Array<OrderBook>> {
@@ -42,6 +45,8 @@ export class AppService {
 
   private async fetchChart1sec(...datehours: Array<string>): Promise<Array<ChartEach>> {
     const tmp: Array<ChartEach> = [];
+    let sumQuantity = 0;
+    let i = 0;
     for (const datehour of datehours) {
       let charts: any = [];
       try {
@@ -51,8 +56,12 @@ export class AppService {
       }
       for (const createdAt of Object.keys(charts)) {
         tmp.push(charts[createdAt]);
+        sumQuantity += charts[createdAt].buyQuantity;
+        i++;
       }
     }
+    this.averageQuantity = sumQuantity / i;
+    console.log(this.averageQuantity);
     return Promise.resolve(tmp);
   }
 

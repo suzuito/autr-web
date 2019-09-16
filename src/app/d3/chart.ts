@@ -25,7 +25,7 @@ export class Chart {
   ) {
     this.selector = selector;
     this.widthSvg = 5000;
-    this.heightSvg = 1000;
+    this.heightSvg = 5000;
     this.paddingLeft = 100;
     this.paddingBottom = 100;
     this.paddingRight = 100;
@@ -106,6 +106,18 @@ export class Chart {
       )
       .call(axisX)
       ;
+    // Chart
+    const sChart = sMain.append('g')
+      .attr(
+        'transform',
+        `translate(${this.paddingLeft}, ${this.paddingTop})`
+      )
+      ;
+    this.drawChart(
+      sChart,
+      scaleTime,
+      scalePrice,
+    );
     // Ladder
     const sLadder = sMain.append('g')
       .attr(
@@ -134,18 +146,6 @@ export class Chart {
         this.orderBooks.get(createdAt).buy,
       );
     }
-    // Chart
-    const sChart = sMain.append('g')
-      .attr(
-        'transform',
-        `translate(${this.paddingLeft}, ${this.paddingTop})`
-      )
-      ;
-    this.drawChart(
-      sChart,
-      scaleTime,
-      scalePrice,
-    );
   }
 
   private drawLadder(
@@ -174,14 +174,19 @@ export class Chart {
     s: any,
   ): void {
     s
-      .attr('class', `.ladder-${createdAt}-${sellOrBuy}`)
+      .attr('class', `ladder-${createdAt}-${sellOrBuy} ladder`)
       .attr('cx', (d: LadderEach) => {
         return xScale(new Date(createdAt * 1000));
       })
       .attr('cy', (d: LadderEach) => {
         return yScale(d.price);
       })
-      .attr('r', '1')
+      .attr('r', (d: LadderEach) => {
+        if (d.quantity > 3) {
+          return 3;
+        }
+        return 0;
+      })
       .attr('stroke-width', '0')
       .attr('stroke', 'none')
       .attr('fill', (d: LadderEach) => {
@@ -189,6 +194,9 @@ export class Chart {
           return d3ScaleChromatic.interpolateReds(zScale(d.quantity));
         }
         return d3ScaleChromatic.interpolateBlues(zScale(d.quantity));
+      })
+      .on('click', (d: LadderEach) => {
+        console.log(d);
       })
       ;
   }

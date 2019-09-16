@@ -43,7 +43,7 @@ export class InputterComponent implements OnInit {
       ));
     }
     const datehourminutesOrderBook: Array<string> = [];
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 30; i++) {
       datehourminutesOrderBook.push(strftime(
         fmtYYYYMMDDHHMM,
         new Date(datetime.getTime() - 60000 * i),
