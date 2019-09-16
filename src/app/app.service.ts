@@ -24,7 +24,7 @@ export class AppService {
     this.averageQuantity = 0;
   }
 
-  private async fetchOrderBooks(...datehourminutes: Array<string>): Promise<Array<OrderBook>> {
+  public async fetchOrderBooks(...datehourminutes: Array<string>): Promise<Array<OrderBook>> {
     const tmp: Array<OrderBook> = [];
     for (const datehourminute of datehourminutes) {
       let obs: any = [];
@@ -43,7 +43,7 @@ export class AppService {
     return Promise.resolve(tmp);
   }
 
-  private async fetchChart1sec(...datehours: Array<string>): Promise<Array<ChartEach>> {
+  public async fetchChart1sec(...datehours: Array<string>): Promise<Array<ChartEach>> {
     const tmp: Array<ChartEach> = [];
     let sumQuantity = 0;
     let i = 0;

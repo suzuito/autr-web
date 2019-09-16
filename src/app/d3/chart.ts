@@ -1,44 +1,40 @@
 
 import * as d3 from 'd3-selection';
 import * as d3Scale from 'd3-scale';
-import * as d3Array from 'd3-array';
 import * as d3ScaleChromatic from 'd3-scale-chromatic';
 import * as d3Axis from 'd3-axis';
 import * as d3Time from 'd3-time';
-import { StoreOrderBookService } from '../store-order-book.service';
-import { OrderBook, LadderEach, ChartEach } from '../model';
+import * as d3Shape from 'd3-shape';
+import { OrderBook, LadderEach, ChartEach, Product } from '../model';
+import { StoreOrderBook, StoreChart, StoreProduct } from '../store';
 import { StoreChart1secService } from '../store-chart1sec.service';
 
 export class Chart {
 
-  private widthSvg: number;
-  private heightSvg: number;
   private paddingLeft: number;
   private paddingRight: number;
   private paddingBottom: number;
   private paddingTop: number;
+  public scaleTime: d3Scale.ScaleTime<number, number>;
+  public scalePrice: d3Scale.ScaleLinear<number, number>;
+  public scaleQuantity: d3Scale.ScaleLinear<number, number>;
 
   constructor(
     private selector: string,
-    private orderBooks: StoreOrderBookService,
-    private chart1sec: StoreChart1secService,
+    private widthSvg: number,
+    private heightSvg: number,
   ) {
     this.selector = selector;
-    this.widthSvg = 5000;
-    this.heightSvg = 5000;
     this.paddingLeft = 100;
     this.paddingBottom = 100;
     this.paddingRight = 100;
     this.paddingTop = 100;
+    this.scaleTime = d3Scale.scaleTime();
+    this.scalePrice = d3Scale.scaleLinear();
+    this.scaleQuantity = d3Scale.scaleLinear();
   }
 
   public redisplay(): void {
-    if (this.orderBooks.length() <= 0) {
-      return;
-    }
-    if (this.chart1sec.length() <= 0) {
-      return;
-    }
     const widthGraph = this.widthSvg - this.paddingLeft - this.paddingRight;
     const heightGraph = this.heightSvg - this.paddingTop - this.paddingBottom;
     const sMain = d3.select(this.selector);
@@ -48,191 +44,205 @@ export class Chart {
       .style('border', '1px solid black')
       ;
     // Scale
-    const scaleTime = d3Scale.scaleTime()
-      .domain([
-        new Date(
-          d3Array.min([
-            this.orderBooks.minCreatedAt().createdAt,
-            this.chart1sec.minCreatedAt().createdAt,
-          ]) * 1000,
-        ),
-        new Date(
-          d3Array.max([
-            this.orderBooks.maxCreatedAt().createdAt,
-            this.chart1sec.maxCreatedAt().createdAt,
-          ]) * 1000,
-        ),
-      ])
+    this.scaleTime
       .range([
         0,
         widthGraph,
       ])
       ;
-    const scalePrice = d3Scale.scaleLinear()
-      .domain([
-        this.orderBooks.minBuyPrice().price,
-        this.orderBooks.maxSellPrice().price,
-      ])
+    this.scalePrice
       .range([
         heightGraph,
         0,
       ])
       ;
-    const scaleQuantity = d3Scale.scaleLinear()
-      .domain([
-        0,
-        3,
-      ])
+    this.scaleQuantity
       .range([
         0,
         1,
       ])
       ;
     // axis
-    const axisY = d3Axis.axisLeft(scalePrice);
-    const sAxisY = sMain.append('g')
+    const axisY = d3Axis.axisLeft(this.scalePrice);
+    this.g('axis-y')
       .attr(
         'transform',
         `translate(${this.paddingLeft}, ${this.paddingTop})`
       )
       .call(axisY)
       ;
-    const axisX = d3Axis.axisBottom(scaleTime);
+    const axisX = d3Axis.axisBottom(this.scaleTime);
     axisX.ticks(d3Time.timeMinute.every(1));
-    const sAxisX = sMain.append('g')
+    this.g('axis-x')
       .attr(
         'transform',
         `translate(${this.paddingLeft}, ${this.heightSvg - this.paddingBottom})`
       )
       .call(axisX)
       ;
-    // Chart
-    const sChart = sMain.append('g')
-      .attr(
-        'transform',
-        `translate(${this.paddingLeft}, ${this.paddingTop})`
-      )
-      ;
-    this.drawChart(
-      sChart,
-      scaleTime,
-      scalePrice,
-    );
-    // Ladder
-    const sLadder = sMain.append('g')
-      .attr(
-        'transform',
-        `translate(${this.paddingLeft}, ${this.paddingTop})`
-      )
-      ;
-    const createdAts = this.orderBooks.keys();
-    for (const createdAt of createdAts) {
-      this.drawLadder(
-        sLadder,
-        createdAt,
-        'sell',
-        scaleTime,
-        scalePrice,
-        scaleQuantity,
-        this.orderBooks.get(createdAt).sell,
-      );
-      this.drawLadder(
-        sLadder,
-        createdAt,
-        'buy',
-        scaleTime,
-        scalePrice,
-        scaleQuantity,
-        this.orderBooks.get(createdAt).buy,
-      );
+  }
+
+  public g(id: string): any {
+    const sMain = d3.select(this.selector);
+    let s = sMain.select(`#${id}`);
+    if (s.empty()) {
+      s = sMain.append('g').attr('id', id);
     }
-  }
-
-  private drawLadder(
-    sParent: any,
-    createdAt: number,
-    sellOrBuy: string,
-    xScale: d3Scale.ScaleTime<number, number>,
-    yScale: d3Scale.ScaleLinear<number, number>,
-    zScale: d3Scale.ScaleLinear<number, number>,
-    ladder: Array<LadderEach>,
-  ): void {
-    const sLadder = sParent.selectAll(`.ladder-${createdAt}-${sellOrBuy}`).data(ladder);
-    const sLadderEnter = sLadder.enter().append('circle');
-    const sLadderExit = sLadder.exit();
-    sLadderExit.remove();
-    this.drawLadderEach(createdAt, sellOrBuy, xScale, yScale, zScale, sLadder);
-    this.drawLadderEach(createdAt, sellOrBuy, xScale, yScale, zScale, sLadderEnter);
-  }
-
-  private drawLadderEach(
-    createdAt: number,
-    sellOrBuy: string,
-    xScale: d3Scale.ScaleTime<number, number>,
-    yScale: d3Scale.ScaleLinear<number, number>,
-    zScale: d3Scale.ScaleLinear<number, number>,
-    s: any,
-  ): void {
     s
-      .attr('class', `ladder-${createdAt}-${sellOrBuy} ladder`)
-      .attr('cx', (d: LadderEach) => {
-        return xScale(new Date(createdAt * 1000));
-      })
-      .attr('cy', (d: LadderEach) => {
-        return yScale(d.price);
-      })
-      .attr('r', (d: LadderEach) => {
-        if (d.quantity > 3) {
-          return 3;
-        }
-        return 0;
-      })
-      .attr('stroke-width', '0')
-      .attr('stroke', 'none')
-      .attr('fill', (d: LadderEach) => {
-        if (sellOrBuy === 'buy') {
-          return d3ScaleChromatic.interpolateReds(zScale(d.quantity));
-        }
-        return d3ScaleChromatic.interpolateBlues(zScale(d.quantity));
-      })
-      .on('click', (d: LadderEach) => {
-        console.log(d);
-      })
+      .attr(
+        'transform',
+        `translate(${this.paddingLeft}, ${this.paddingTop})`
+      )
       ;
+    return s;
   }
+}
 
-  private drawChart(
-    sParent: any,
-    xScale: d3Scale.ScaleTime<number, number>,
-    yScale: d3Scale.ScaleLinear<number, number>,
-  ): void {
-    const createdAts: Array<number> = this.chart1sec.keys();
-    const sChart = sParent.selectAll(`.chart`).data(createdAts);
-    const sChartEnter = sChart.enter().append('polyline');
-    const sChartExit = sChart.exit();
-    sChartExit.remove();
-    this.drawChartEach(xScale, yScale, sChart);
-    this.drawChartEach(xScale, yScale, sChartEnter);
-  }
+export function redisplayChart(
+  sParent: any,
+  xScale: d3Scale.ScaleTime<number, number>,
+  yScale: d3Scale.ScaleLinear<number, number>,
+  chart1sec: StoreChart,
+): void {
+  const createdAts: Array<number> = chart1sec.keys();
+  const sChart = sParent.selectAll(`.chart`).data(createdAts);
+  const sChartEnter = sChart.enter().append('polyline');
+  const sChartExit = sChart.exit();
+  sChartExit.remove();
+  redisplayChartEach(xScale, yScale, sChart, chart1sec);
+  redisplayChartEach(xScale, yScale, sChartEnter, chart1sec);
+}
 
-  private drawChartEach(
-    xScale: d3Scale.ScaleTime<number, number>,
-    yScale: d3Scale.ScaleLinear<number, number>,
-    s: any,
-  ): void {
-    s
-      .attr('class', `.chart`)
-      .attr('points', (createdAt: number) => {
-        const d: ChartEach = this.chart1sec.get(createdAt);
-        const yMax: number = yScale(d.priceMax);
-        const yMin: number = yScale(d.priceMin);
-        const x: number = xScale(new Date(d.createdAt * 1000));
-        const points: Array<string> = new Array<string>();
-        const w = 3;
-        return `${x} ${yMin} ${x + w} ${yMin} ${x + w} ${yMax} ${x} ${yMax} ${x} ${yMin}`;
-      })
-      .attr('stroke', 'black')
-      .attr('fill', 'none')
-      ;
+function redisplayChartEach(
+  xScale: d3Scale.ScaleTime<number, number>,
+  yScale: d3Scale.ScaleLinear<number, number>,
+  s: any,
+  chart1sec: StoreChart,
+): void {
+  s
+    .attr('class', `chart`)
+    .attr('points', (createdAt: number) => {
+      const d: ChartEach = chart1sec.get(createdAt);
+      const yMax: number = yScale(d.priceMax);
+      const yMin: number = yScale(d.priceMin);
+      const x: number = xScale(new Date(d.createdAt * 1000));
+      const w = 3;
+      return `${x} ${yMin} ${x + w} ${yMin} ${x + w} ${yMax} ${x} ${yMax} ${x} ${yMin}`;
+    })
+    .attr('stroke', 'black')
+    .attr('fill', 'none')
+    ;
+}
+
+export function redisplayOrderBooks(
+  sLadder: any,
+  xScale: d3Scale.ScaleTime<number, number>,
+  yScale: d3Scale.ScaleLinear<number, number>,
+  zScale: d3Scale.ScaleLinear<number, number>,
+  orderBooks: StoreOrderBook,
+  r: (d: LadderEach) => void = (_) => 1,
+): void {
+  const createdAts = orderBooks.keys();
+  for (const createdAt of createdAts) {
+    redisplayLadder(
+      sLadder,
+      createdAt,
+      'sell',
+      xScale,
+      yScale,
+      zScale,
+      orderBooks.get(createdAt).sell,
+      r,
+    );
+    redisplayLadder(
+      sLadder,
+      createdAt,
+      'buy',
+      xScale,
+      yScale,
+      zScale,
+      orderBooks.get(createdAt).buy,
+      r,
+    );
   }
+}
+
+
+function redisplayLadder(
+  sParent: any,
+  createdAt: number,
+  sellOrBuy: string,
+  xScale: d3Scale.ScaleTime<number, number>,
+  yScale: d3Scale.ScaleLinear<number, number>,
+  zScale: d3Scale.ScaleLinear<number, number>,
+  ladder: Array<LadderEach>,
+  r: (d: LadderEach) => void,
+): void {
+  const sLadder = sParent.selectAll(`.ladder-${createdAt}-${sellOrBuy}`).data(ladder);
+  const sLadderEnter = sLadder.enter().append('circle');
+  const sLadderExit = sLadder.exit();
+  sLadderExit.remove();
+  redisplayLadderEach(createdAt, sellOrBuy, xScale, yScale, zScale, sLadder, r);
+  redisplayLadderEach(createdAt, sellOrBuy, xScale, yScale, zScale, sLadderEnter, r);
+}
+
+function redisplayLadderEach(
+  createdAt: number,
+  sellOrBuy: string,
+  xScale: d3Scale.ScaleTime<number, number>,
+  yScale: d3Scale.ScaleLinear<number, number>,
+  zScale: d3Scale.ScaleLinear<number, number>,
+  s: any,
+  r: (d: LadderEach) => void,
+): void {
+  s
+    .attr('class', `ladder-${createdAt}-${sellOrBuy} ladder`)
+    .attr('cx', (d: LadderEach) => {
+      return xScale(new Date(createdAt * 1000));
+    })
+    .attr('cy', (d: LadderEach) => {
+      return yScale(d.price);
+    })
+    .attr('r', r)
+    .attr('stroke-width', '0')
+    .attr('stroke', 'none')
+    .attr('fill', (d: LadderEach) => {
+      if (sellOrBuy === 'buy') {
+        return d3ScaleChromatic.interpolateReds(zScale(d.quantity));
+      }
+      return d3ScaleChromatic.interpolateBlues(zScale(d.quantity));
+    })
+    .on('click', (d: LadderEach) => {
+      console.log(d);
+    })
+    ;
+}
+
+
+export function redisplayPriceLine(
+  sParent: any,
+  xScale: d3Scale.ScaleTime<number, number>,
+  yScale: d3Scale.ScaleLinear<number, number>,
+  store: StoreProduct,
+): void {
+  const line = d3Shape.line()
+    .x((createdAt: any, i) => {
+      return xScale(new Date(createdAt * 1000));
+    })
+    .y((createdAt: any) => {
+      return yScale(store.get(createdAt).price);
+    })
+    ;
+  let s = sParent.select('.priceline');
+  if (s.empty()) {
+    s = sParent.append('path')
+      .attr('class', 'priceline');
+  }
+  s
+    .datum(store.keys())
+    .attr('fill', 'none')
+    .attr('stroke', 'black')
+    .attr('stroke-width', '1px')
+    .attr('d', line)
+    ;
 }
