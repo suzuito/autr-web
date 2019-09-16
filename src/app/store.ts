@@ -1,4 +1,4 @@
-import { ChartEach, OrderBook, LadderEach, maxPriceLadderEach, minPriceLadderEach, SequenceByCreatedAt } from './model';
+import { ChartEach, OrderBook, LadderEach, maxPriceLadderEach, minPriceLadderEach, SequenceByCreatedAt, Product } from './model';
 import {
   min,
   max,
@@ -17,6 +17,10 @@ export class StoreBase {
       ret.push(createdAt);
     }
     return ret;
+  }
+
+  public has(createdAt: number): boolean {
+    return this.s.has(createdAt);
   }
 
   public set(...orderBooks: Array<SequenceByCreatedAt>): void {
@@ -44,6 +48,14 @@ export class StoreBase {
   public length(): number {
     return this.s.size;
   }
+
+  public deleteUntil(createdAt: number): void {
+    for (const c of this.s.keys()) {
+      if (c <= createdAt) {
+        this.s.delete(c);
+      }
+    }
+  }
 }
 
 
@@ -59,6 +71,21 @@ export class StoreChart extends StoreBase {
 
   public maxCreatedAt(): ChartEach {
     return super.maxCreatedAt() as ChartEach;
+  }
+}
+
+export class StoreProduct extends StoreBase {
+
+  public get(createdAt: number): Product {
+    return super.get(createdAt) as Product;
+  }
+
+  public minCreatedAt(): Product {
+    return super.minCreatedAt() as Product;
+  }
+
+  public maxCreatedAt(): Product {
+    return super.maxCreatedAt() as Product;
   }
 }
 

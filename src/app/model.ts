@@ -32,6 +32,21 @@ export interface OrderBook extends SequenceByCreatedAt {
   buy: Array<LadderEach>;
 }
 
+export function newLadder(arr: Array<Array<string>>): Array<LadderEach> {
+  const l: Array<LadderEach> = [];
+  for (const i of arr) {
+    l.push({
+      price: parseFloat(i[0]),
+      quantity: parseFloat(i[1]),
+    });
+  }
+  return l;
+}
+
+export interface Product extends SequenceByCreatedAt {
+  price: number;
+}
+
 export function maxPriceLadderEach(arr: Array<LadderEach>): LadderEach {
   const i = max(arr.slice(0, 70), v => v.price);
   return arr[i];
