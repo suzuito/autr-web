@@ -40,7 +40,7 @@ export class RealtimeComponent implements OnInit {
         this.all.cleanup();
         const dnow = new Date();
         const now = Math.floor(dnow.getTime() / 1000);
-        if (dnow.getSeconds() % 5 === 0) {
+        if (dnow.getSeconds() % 59 === 0) {
           const orderBooks = await this.app.fetchOrderBooks(
             strftime(fmtYYYYMMDDHHMM, dnow),
           );
