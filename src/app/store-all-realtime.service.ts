@@ -38,7 +38,7 @@ export class StoreAllRealtimeService {
   }
 
   public cleanup(): void {
-    const now = (Date.now() / 1000) - 540;
+    const now = (Date.now() / 1000) - 200;
     this.storeOrderBook.deleteUntil(now);
     this.storeProduct.deleteUntil(now);
   }

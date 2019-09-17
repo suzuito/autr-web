@@ -40,7 +40,9 @@ export class RealtimeComponent implements OnInit {
         this.all.cleanup();
         const dnow = new Date();
         const now = Math.floor(dnow.getTime() / 1000);
-        if (dnow.getSeconds() % 59 === 0) {
+        if (dnow.getSeconds() % 59 === 0 ||
+          dnow.getSeconds() % 58 === 0 ||
+          dnow.getSeconds() % 57 === 0) {
           const orderBooks = await this.app.fetchOrderBooks(
             strftime(fmtYYYYMMDDHHMM, dnow),
           );
@@ -64,7 +66,7 @@ export class RealtimeComponent implements OnInit {
         );
         this.chart.scaleTime
           .domain([
-            new Date((now - 600) * 1000),
+            new Date((now - 180) * 1000),
             new Date(now * 1000),
           ])
           ;
