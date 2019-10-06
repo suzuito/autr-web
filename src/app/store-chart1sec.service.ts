@@ -4,14 +4,14 @@ import { EventEmitter } from 'events';
 import { ChartEach } from './model';
 
 
-export enum StoreChart1secServiceEvent {
+export enum StoreChartServiceEvent {
   Set = 'set',
 }
 
 @Injectable({
   providedIn: 'root'
 })
-export class StoreChart1secService extends StoreChart {
+export class StoreChartService extends StoreChart {
 
   public event: EventEmitter;
 
@@ -22,6 +22,6 @@ export class StoreChart1secService extends StoreChart {
 
   public set(...chartEachs: Array<ChartEach>): void {
     super.set(...chartEachs);
-    this.event.emit(StoreChart1secServiceEvent.Set, ...chartEachs);
+    this.event.emit(StoreChartServiceEvent.Set, ...chartEachs);
   }
 }

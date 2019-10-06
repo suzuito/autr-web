@@ -1,16 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { LiquidService } from '../liquid.service';
-import { StoreAllRealtimeService } from '../store-all-realtime.service';
-import { Chart, redisplayOrderBooks, redisplayPriceLine } from '../d3/chart';
-import { timezone } from 'strftime';
+import { StoreAllRealtimeService, groupLadder } from '../store-all-realtime.service';
+import { Chart, redisplayOrderBooks, redisplayPriceLine, redisplayGroupedLadders } from '../d3/chart';
 
-import * as d3Array from 'd3-array';
-import { normalizeLadderEach } from '../model';
+import { normalizeLadderEach, maxPriceLadderEach, minPriceLadderEach } from '../model';
 import { AppService } from '../app.service';
-import { ApiService } from '../api.service';
+import { RealtimeSettingService } from './realtime-setting.service';
 
-const strftime = timezone('+0900');
-const fmtYYYYMMDDHHMM = '%Y%m%d%H%M';
 
 @Component({
   selector: 'app-realtime',
@@ -25,39 +21,29 @@ export class RealtimeComponent implements OnInit {
     private liquid: LiquidService,
     private all: StoreAllRealtimeService,
     private app: AppService,
+    public setting: RealtimeSettingService,
   ) {
     this.chart = new Chart(
       '#main',
-      1000,
-      1000,
+      2000,
+      5000,
     );
   }
 
   ngOnInit() {
+    this.setting.group = true;
+    this.setting.point = false;
     this.liquid.connect();
     setInterval(
       async () => {
         this.all.cleanup();
         const dnow = new Date();
         const now = Math.floor(dnow.getTime() / 1000);
-        if (dnow.getSeconds() % 59 === 0 ||
-          dnow.getSeconds() % 58 === 0 ||
-          dnow.getSeconds() % 57 === 0) {
-          const orderBooks = await this.app.fetchOrderBooks(
-            strftime(fmtYYYYMMDDHHMM, dnow),
-          );
-          for (const o of orderBooks) {
-            this.all.set(
-              o,
-              null,
-            );
-          }
-        }
         this.all.set(
           {
             createdAt: now,
-            sell: normalizeLadderEach(this.liquid.sell),
-            buy: normalizeLadderEach(this.liquid.buy),
+            sell: normalizeLadderEach(this.liquid.sell, true),
+            buy: normalizeLadderEach(this.liquid.buy, false),
           },
           {
             createdAt: now,
@@ -77,25 +63,62 @@ export class RealtimeComponent implements OnInit {
           ])
           ;
         this.chart.scaleQuantity
-          .domain([
-            0,
-            3,
-          ])
+          .domain([0, 3])
           ;
         this.chart.redisplay();
-        redisplayOrderBooks(
-          this.chart.g('order-book'),
-          this.chart.scaleTime,
-          this.chart.scalePrice,
-          this.chart.scaleQuantity,
-          this.all.storeOrderBook,
-          (_) => 3,
-        );
+        if (this.setting.point) {
+          redisplayOrderBooks(
+            this.chart.g('order-book'),
+            this.chart.scaleTime,
+            this.chart.scalePrice,
+            this.chart.scaleQuantity,
+            this.all.storeOrderBook,
+            (_) => 3,
+          );
+        }
+        if (this.setting.group) {
+          const sGroupedLadders = this.chart.g('grouped-ladders');
+          sGroupedLadders.selectAll('*').remove();
+          for (const createdAt of this.all.storeOrderBook.keys()) {
+            const orderBook = this.all.storeOrderBook.get(createdAt);
+            const groupedBuy = groupLadder(
+              createdAt,
+              orderBook.buy,
+              maxPriceLadderEach(orderBook.buy).price,
+              -100,
+            );
+            const groupedSell = groupLadder(
+              createdAt,
+              orderBook.sell,
+              minPriceLadderEach(orderBook.sell).price,
+              100,
+            );
+            redisplayGroupedLadders(
+              sGroupedLadders,
+              this.chart.scaleTime,
+              this.chart.scalePrice,
+              this.chart.scaleQuantity,
+              createdAt,
+              groupedBuy,
+              'buy',
+            );
+            redisplayGroupedLadders(
+              sGroupedLadders,
+              this.chart.scaleTime,
+              this.chart.scalePrice,
+              this.chart.scaleQuantity,
+              createdAt,
+              groupedSell,
+              'sell',
+            );
+          }
+        }
         redisplayPriceLine(
           this.chart.g('price-line'),
           this.chart.scaleTime,
           this.chart.scalePrice,
           this.all.storeProduct,
+          (createdAt: number) => this.all.storeProduct.get(createdAt).price,
         );
       },
       1000,

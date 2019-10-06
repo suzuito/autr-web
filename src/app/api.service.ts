@@ -92,11 +92,12 @@ export class ApiService {
     );
   }
 
-  public async getChart1sec(
+  public async getChart(
     datehour: string,
+    duration: string,
   ): Promise<Map<string, ChartEach>> {
     return this.http.get<Map<string, ChartEach>>(
-      url(`/chart1sec/${datehour}.json`),
+      url(`/chart/${duration}/${datehour}.json`),
       new OptBuilder()
         .jsonResponseBody()
         .gen(),

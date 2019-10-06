@@ -1,6 +1,11 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { InputterComponent } from './inputter.component';
+import { FormsModule } from '@angular/forms';
+import { MatFormFieldModule, MatFormFieldControl } from '@angular/material/form-field';
+import { HttpClientModule } from '@angular/common/http';
+import { MatInputModule } from '@angular/material/input';
+import { NoopAnimationsModule } from '@angular/platform-browser/animations';
 
 describe('InputterComponent', () => {
   let component: InputterComponent;
@@ -8,9 +13,15 @@ describe('InputterComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ InputterComponent ]
+      imports: [
+        FormsModule,
+        HttpClientModule,
+        MatInputModule,
+        NoopAnimationsModule,
+      ],
+      declarations: [InputterComponent]
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

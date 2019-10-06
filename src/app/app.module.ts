@@ -5,6 +5,7 @@ import { NgModule } from '@angular/core';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
 import { MatButtonModule } from '@angular/material/button';
+import { MatCheckboxModule } from '@angular/material/checkbox';
 
 import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
@@ -23,7 +24,7 @@ import { RealtimeComponent } from './realtime/realtime.component';
     InputterComponent,
     InfoComponent,
     HistoryComponent,
-    RealtimeComponent
+    RealtimeComponent,
   ],
   imports: [
     BrowserModule,
@@ -35,6 +36,7 @@ import { RealtimeComponent } from './realtime/realtime.component';
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatCheckboxModule,
   ],
   providers: [
   ],

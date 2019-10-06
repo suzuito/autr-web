@@ -1,8 +1,7 @@
 import { Injectable } from '@angular/core';
-import { StoreChart1secService } from './store-chart1sec.service';
-import { StoreOrderBookService } from './store-order-book.service';
 import { ChartEach, OrderBook } from './model';
 import { EventEmitter } from 'events';
+import { StoreChart } from './store';
 
 export enum StoreAllServiceEvent {
   Set = 'set',
@@ -14,20 +13,22 @@ export enum StoreAllServiceEvent {
 export class StoreAllService {
 
   public event: EventEmitter;
+  public chart01sec: StoreChart;
+  public chart60sec: StoreChart;
 
   constructor(
-    private chart1sec: StoreChart1secService,
-    private orderBooks: StoreOrderBookService,
   ) {
     this.event = new EventEmitter();
+    this.chart01sec = new StoreChart();
+    this.chart60sec = new StoreChart();
   }
 
   public set(
-    c1secs: Array<ChartEach>,
-    obs: Array<OrderBook>,
+    c1secs01: Array<ChartEach>,
+    c1secs60: Array<ChartEach>,
   ): void {
-    this.chart1sec.set(...c1secs);
-    this.orderBooks.set(...obs);
+    this.chart01sec.set(...c1secs01);
+    this.chart60sec.set(...c1secs60);
     this.event.emit(StoreAllServiceEvent.Set);
   }
 }

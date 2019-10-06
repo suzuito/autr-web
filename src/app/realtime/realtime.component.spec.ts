@@ -1,6 +1,9 @@
 import { async, ComponentFixture, TestBed } from '@angular/core/testing';
 
 import { RealtimeComponent } from './realtime.component';
+import { MatCheckboxModule } from '@angular/material/checkbox';
+import { FormsModule } from '@angular/forms';
+import { HttpClientModule } from '@angular/common/http';
 
 describe('RealtimeComponent', () => {
   let component: RealtimeComponent;
@@ -8,9 +11,16 @@ describe('RealtimeComponent', () => {
 
   beforeEach(async(() => {
     TestBed.configureTestingModule({
-      declarations: [ RealtimeComponent ]
+      declarations: [
+        RealtimeComponent,
+      ],
+      imports: [
+        HttpClientModule,
+        FormsModule,
+        MatCheckboxModule,
+      ],
     })
-    .compileComponents();
+      .compileComponents();
   }));
 
   beforeEach(() => {

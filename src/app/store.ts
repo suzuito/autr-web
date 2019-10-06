@@ -19,6 +19,10 @@ export class StoreBase {
     return ret;
   }
 
+  public sortedKeys(): Array<number> {
+    return this.keys().sort();
+  }
+
   public has(createdAt: number): boolean {
     return this.s.has(createdAt);
   }
@@ -56,6 +60,16 @@ export class StoreBase {
       }
     }
   }
+
+  public filter(fn: (v: SequenceByCreatedAt) => boolean): Array<SequenceByCreatedAt> {
+    const ret: Array<SequenceByCreatedAt> = [];
+    for (const k of this.sortedKeys()) {
+      if (fn(this.s.get(k))) {
+        ret.push(this.s.get(k));
+      }
+    }
+    return ret;
+  }
 }
 
 
@@ -65,12 +79,58 @@ export class StoreChart extends StoreBase {
     return super.get(createdAt) as ChartEach;
   }
 
+  // public getSections(
+  //   createdAtStart: number,
+  //   createdAtEnd: number,
+  //   window: number,
+  // ): StoreChart {
+  //   const store: StoreChart = getSections(
+  //     this.s as Map<number, ChartEach>,
+  //     createdAtStart,
+  //     createdAtEnd,
+  //     window,
+  //   );
+  //   return store;
+  // }
+
   public minCreatedAt(): ChartEach {
     return super.minCreatedAt() as ChartEach;
   }
 
   public maxCreatedAt(): ChartEach {
     return super.maxCreatedAt() as ChartEach;
+  }
+
+  public minPrice(): ChartEach {
+    let m: ChartEach = null;
+    this.s.forEach((v: ChartEach) => {
+      if (!m) {
+        m = v;
+        return;
+      }
+      if (v.priceMin < m.priceMin) {
+        m = v;
+      }
+    });
+    return m;
+  }
+
+  public maxPrice(): ChartEach {
+    let m: ChartEach = null;
+    this.s.forEach((v: ChartEach) => {
+      if (!m) {
+        m = v;
+        return;
+      }
+      if (v.priceMax > m.priceMax) {
+        m = v;
+      }
+    });
+    return m;
+  }
+
+  public filter(fn: (v: SequenceByCreatedAt) => boolean): Array<ChartEach> {
+    return super.filter(fn) as Array<ChartEach>;
   }
 }
 

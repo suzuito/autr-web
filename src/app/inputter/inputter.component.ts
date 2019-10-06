@@ -36,15 +36,15 @@ export class InputterComponent implements OnInit {
       this.time,
     );
     const datehoursChart1sec: Array<string> = [];
-    for (let i = 0; i < 2; i++) {
+    for (let i = 0; i < 6; i++) {
       datehoursChart1sec.push(strftime(
         fmtYYYYMMDDHH,
         new Date(datetime.getTime() - 3600000 * i),
       ));
     }
     const datehourminutesOrderBook: Array<string> = [];
-    // for (let i = 0; i < 30; i++) {
-    for (let i = 0; i < 5; i++) {
+    for (let i = 0; i < 1; i++) {
+      // for (let i = 0; i < 5; i++) {
       datehourminutesOrderBook.push(strftime(
         fmtYYYYMMDDHHMM,
         new Date(datetime.getTime() - 60000 * i),
